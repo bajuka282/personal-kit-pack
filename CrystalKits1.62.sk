@@ -1,0 +1,1466 @@
+
+
+# Crystal Kits
+# Version 1.62
+# Created by clapxz
+# https://www.clapxz.com/skript
+
+
+
+# ------------------------- SETTINGS ------------------------- #
+
+options:
+	prefix: "<##FFFFFF>[<##008AFB>&lC<##FF0000>&lK&l<##FFFFFF>]"
+	name: "<##008AFB>&lCrystal<##FF0000>&lKits"
+	version: "1.62"
+	build: "Public"
+
+
+	# Colors (Use two ## for correct usage) (&7, or &e types can be used)
+	# Most colors are here.
+	gray_color: "<##8C8C8C>"
+	yellow_color: "<##FBF300>"
+	red_color: "<##FB1717>"
+	purple_color: "<##AF00FF>"
+	green_color: "<##12FB00>"
+	pink_color: "<##FB00C2>"
+	blue_color: "<##00A2FF>"
+	white_color: "<##FFFFFF>"
+
+	# Commands
+
+	heal_command: /heal
+
+	# Permissions:
+
+	# crystalkits.admin - /crystalkits
+	# crystalkits.heal - /heal
+
+
+
+# ------------------------------------------------------------ #
+
+
+
+
+
+
+
+
+command /clearinv:
+	trigger:
+		clear player's inventory
+		set player's offhand item to air
+		set player's helmet to air
+		set player's chestplate to air
+		set player's leggings to air
+		set player's boots to air
+
+
+function kitNoti(p: offlineplayer):
+	loop all players:
+		if {noti::%loop-player's uuid%} is not set:
+			send "%{@prefix}% %{@white_color}%%{_p}% loaded a kit." to loop-player
+
+function roomNoti(p: offlineplayer):
+	loop all players:
+		if {noti::%loop-player's uuid%} is not set:
+			send "%{@prefix}% %{@white_color}%%{_p}% opened the kit room." to loop-player
+
+function ecNoti(p: offlineplayer):
+	loop all players:
+		if {noti::%loop-player's uuid%} is not set:
+			send "%{@prefix}% %{@white_color}%%{_p}% loaded a enderchest." to loop-player
+
+function healNoti(p: offlineplayer):
+	loop all players:
+		if {noti::%loop-player's uuid%} is not set:
+			send "%{@prefix}% %{@white_color}%%{_p}% healed themselves." to loop-player
+
+
+
+function editKit(p: offlineplayer, k: integer):
+	set {kit.%{_k}%::%{_p}'s uuid%} to true
+	open chest inventory with 7 rows named "%{@gray_color}%%{_p}%'s Kit ##%{_k}%" to {_p}
+	wait 1 tick
+	if {globalKits::*} contains "%{_k}%.%{_p}%":
+		set {_globalKit} to "%{@green_color}%&lGLOBAL"
+		set {_globalKitQuiet} to "%{@green_color}%Global"
+	else:
+		set {_globalKit} to "%{@red_color}%&lPRIVATE"
+		set {_globalKitQuiet} to "%{@red_color}%Private"
+	if {kit.%{_k}%.nickname::%{_p}'s uuid%} is not set:
+		set {_nn} to "None"
+	else:
+		set {_nn} to {kit.%{_k}%.nickname::%{_p}'s uuid%}
+	set slot 49 of {_p}'s current inventory to {head.info} named "%{@yellow_color}%&lKit Info" with lore "%{@gray_color}%Kit Number: %{@yellow_color}%%{_k}%" and "%{@gray_color}%Nickname: %{@green_color}%%{_nn}%" and "%{@gray_color}%Privacy: %{_globalKitQuiet}%"
+	set {_c} to 0
+	loop 36 times:
+		set slot {_c} of {_p}'s current inventory to {slot%{_c}%.%{_k}%::%{_p}'s uuid%}
+		add 1 to {_c}
+	set slot 36 of {_p}'s current inventory to {boots.%{_k}%::%{_p}'s uuid%}
+	set slot 37 of {_p}'s current inventory to {leggings.%{_k}%::%{_p}'s uuid%}
+	set slot 38 of {_p}'s current inventory to {chestplate.%{_k}%::%{_p}'s uuid%}
+	set slot 39 of {_p}'s current inventory to {helmet.%{_k}%.%{_k}%::%{_p}'s uuid%}
+	set slot 40 of {_p}'s current inventory to {offhand.%{_k}%::%{_p}'s uuid%}
+	set slot 41, 42, 43, 44 of {_p}'s current inventory to white stained glass pane named "%{@gray_color}%&l<- ARMOUR AND OFFHAND"
+	set slot 48 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 47 of {_p}'s current inventory to nametag named "%{@purple_color}%&lSET NICKNAME" with lore "%{@gray_color}%Click to set kit nickname."
+	set slot 46 of {_p}'s current inventory to {head.bluebackpack} named "%{@blue_color}%&lIMPORT CURRENT INVENTORY" with lore "%{@gray_color}%Click to import your current inventory."
+	set slot 51 of {_p}'s current inventory to {head.globe} named "%{@yellow_color}%&lPRIVACY" with lore "%{@gray_color}%Allow other users to use your kit!" and "" and "%{@gray_color}%Currently: %{_globalKit}%"
+	set slot 45 of {_p}'s current inventory to {head.checkmark} named "%{@green_color}%&lSAVE AND QUIT" with lore "%{@gray_color}%Click to save and quit."
+	set slot 50 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 52 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 53 of {_p}'s current inventory to {head.redx} named "%{@red_color}%&lQUIT" with lore "%{@gray_color}%Click to cancel, and quit."
+
+function previewKit(p: offlineplayer, k: integer, target: offlineplayer):
+	open chest inventory with 7 rows named "%{@gray_color}%Preview Kit" to {_p}
+	wait 1 tick
+	set {_c} to 0
+	loop 36 times:
+		set slot {_c} of {_p}'s current inventory to {slot%{_c}%.%{_k}%::%{_target}'s uuid%}
+		add 1 to {_c}
+	set slot 36 of {_p}'s current inventory to {boots.%{_k}%::%{_target}'s uuid%}
+	set slot 37 of {_p}'s current inventory to {leggings.%{_k}%::%{_target}'s uuid%}
+	set slot 38 of {_p}'s current inventory to {chestplate.%{_k}%::%{_target}'s uuid%}
+	set slot 39 of {_p}'s current inventory to {helmet.%{_k}%.%{_k}%::%{_target}'s uuid%}
+	set slot 40 of {_p}'s current inventory to {offhand.%{_k}%::%{_target}'s uuid%}
+	set slot 41, 42, 43, 44 of {_p}'s current inventory to white stained glass pane named "%{@gray_color}%&l<- ARMOUR AND OFFHAND"
+	set slot 48 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 50 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 52 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 45 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 46 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 47 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 47 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 51 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 49 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 53 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 45 of {_p}'s current inventory to red concrete named "%{@red_color}%&lBACK" with lore "%{@gray_color}%Click to return."
+
+
+command {@heal_command}:
+	permission: crystalkits.heal
+	trigger:
+		heal player
+		feed player
+		healNoti(player)
+
+
+on inventory click:
+	if name of event-inventory is "%{@gray_color}%Preview Kit":
+		cancel event
+		if index of event-slot is 45:
+			globalKits(player, 1)
+			play sound "block.dispenser.fail" with volume 5 with pitch 1 at player for player
+
+on inventory click:
+	if name of event-inventory contains "%{@gray_color}%%player%'s Kit":
+		cancel event
+		set {_e} to name of player's current inventory
+		replace all "%{@gray_color}%%player%'s Kit ##" in {_e} with ""
+		set {_kit} to {_e} parsed as an integer
+		if event-slot is 47:
+			if name of event-item is "%{@purple_color}%&lSET NICKNAME":
+				cancel event
+				nicknameKit(player, {_kit})
+				play sound "ui.toast.in" with volume 100 with pitch 1 at player for player
+		if event-slot is 53:
+			if name of event-item is "%{@red_color}%&lQUIT":
+				cancel event
+				kitMain(player)
+				play sound "block.chest.close" with volume 100 with pitch 1 at player for player
+		if event-slot is 51:
+			if name of event-item is "%{@yellow_color}%&lPRIVACY":
+				cancel event
+				if {globalKits::*} contains "%{_kit}%.%player%":
+					remove "%{_kit}%.%player%" from {globalKits::*}
+					play sound "entity.experience_orb.pickup" with volume 100 with pitch 0.8 at player for player
+					set slot 51 of player's current inventory to {head.globe} named "%{@yellow_color}%&lPRIVACY" with lore "%{@gray_color}%Allow other users to use your kit!" and "" and "%{@gray_color}%Currently: %{@red_color}%&lPRIVATE"
+				else:
+					{globalKits::*} does not contain "%{_kit}%.%player%"
+					add "%{_kit}%.%player%" to {globalKits::*}
+					play sound "entity.experience_orb.pickup" with volume 100 with pitch 1.1 at player for player
+					set slot 51 of player's current inventory to {head.globe} named "%{@yellow_color}%&lPRIVACY" with lore "%{@gray_color}%Allow other users to use your kit!" and "" and "%{@gray_color}%Currently: %{@green_color}%&lGLOBAL"
+		if event-slot is 46:
+			if name of event-item is "%{@blue_color}%&lIMPORT CURRENT INVENTORY":
+				cancel event
+				importInv(player)
+				play sound "item.armor.equip_leather" with volume 100 with pitch 1 at player for player
+		if event-slot is 45:
+			if name of event-item is "%{@green_color}%&lSAVE AND QUIT":
+				cancel event
+				saveKit(player, {_kit})
+				wait 1 tick
+				kitMain(player)
+				play sound "entity.experience_orb.pickup" with volume 100 with pitch 1 at player for player
+				send "%{@gray_color}%Kit %{@green_color}%%{_kit}%%{@gray_color}% saved!"
+
+
+function saveKit(p: offlineplayer, n: integer):
+	set {_c} to 0
+	loop 36 times:
+		set {slot%{_c}%.%{_n}%::%{_p}'s uuid%} to slot {_c} of {_p}'s current inventory
+		add 1 to {_c}
+	set {helmet.%{_n}%.%{_n}%::%{_p}'s uuid%} to {_p}'s helmet
+	set {chestplate.%{_n}%::%{_p}'s uuid%} to {_p}'s chestplate
+	set {leggings.%{_n}%::%{_p}'s uuid%} to {_p}'s leggings
+	set {boots.%{_n}%::%{_p}'s uuid%} to {_p}'s boots
+	set {offhand.%{_n}%::%{_p}'s uuid%} to {_p}'s offhand item
+
+function importInv(p: offlineplayer):
+	set {_c} to 0
+	loop 36 times:
+		set slot {_c} of {_p}'s current inventory to slot {_c} of {_p}'s inventory
+		add 1 to {_c}
+	set slot 36 of {_p}'s current inventory to {_p}'s boots
+	set slot 37 of {_p}'s current inventory to {_p}'s leggings
+	set slot 38 of {_p}'s current inventory to {_p}'s chestplate
+	set slot 39 of {_p}'s current inventory to {_p}'s helmet
+	set slot 40 of {_p}'s current inventory to {_p}'s offhand item
+
+
+function nicknameKit(p: offlineplayer, n: integer):
+	set {nicknaming::%{_p}'s uuid%} to true
+	set {nicknamingNum::%{_p}'s uuid%} to {_n}
+	close {_p}'s inventory
+	send "" to {_p}
+	send "&7Type the nickname you want in %{@purple_color}%Chat" to {_p}
+	send "" to {_p}
+
+on chat:
+	if {nicknaming::%player's uuid%} is set:
+		set {kit.%{nicknamingNum::%player's uuid%}%.nickname::%player's uuid%} to message
+		send "&7Set the nickname for kit %{@purple_color}%%{nicknamingNum::%player's uuid%}%&7 to %{@purple_color}%%message%"
+		editKit(player, {nicknamingNum::%player's uuid%})
+		delete {nicknamingNum::%player's uuid%}
+		delete {nicknaming::%player's uuid%}
+		play sound "ui.toast.out" with volume 100 with pitch 1 at player for player
+		cancel event
+
+		
+command /kitload <integer>:
+	trigger:
+		if arg-1 is between 1 and 9:
+			if {kit.%arg-1%::%player's uuid%} is set:
+				set {_c} to 0
+				set player's helmet to {helmet.%arg-1%.%arg-1%::%player's uuid%}
+				set player's chestplate to {chestplate.%arg-1%::%player's uuid%}
+				set player's leggings to {leggings.%arg-1%::%player's uuid%}
+				set player's boots to {boots.%arg-1%::%player's uuid%}
+				set player's offhand item to {offhand.%arg-1%::%player's uuid%}
+				set {lastkit::%player's uuid%} to arg-1
+				add 1 to {kitsloaded::%player's uuid%}
+				loop 36 times:
+					set slot {_c} of player's inventory to {slot%{_c}%.%arg-1%::%player's uuid%}
+					add 1 to {_c}
+				kitNoti(player)
+			else:
+				send "&4%{@red_color}%This kit does not exist"
+
+
+command /stealkit <offlineplayer> <integer>:
+	permission: steal.kit
+	trigger:
+		if arg-2 is between 1 and 9:
+			if {kit.%arg-2%::%arg-1's uuid%} is set:
+				set {_c} to 0
+				set player's helmet to {helmet.%arg-2%.%arg-2%::%arg-1's uuid%}
+				set player's chestplate to {chestplate.%arg-2%::%arg-1's uuid%}
+				set player's leggings to {leggings.%arg-2%::%arg-1's uuid%}
+				set player's boots to {boots.%arg-2%::%arg-1's uuid%}
+				set player's offhand item to {offhand.%arg-2%::%arg-1's uuid%}
+				add 1 to {kitsloaded::%player's uuid%}
+				loop 36 times:
+					set slot {_c} of player's inventory to {slot%{_c}%.%arg-2%::%arg-1's uuid%}
+					add 1 to {_c}
+				send "%{@green_color}%%arg-1%'s Kit %{@green_color}%&l%arg-2% <##12FB00>loaded"
+				kitNoti(player)
+			else:
+				send "&4%{@red_color}%This kit does not exist"
+
+function stealKit(p: offlineplayer, target: offlineplayer, kit: integer):
+	set {_c} to 0
+	set {_p}'s helmet to {helmet.%{_kit}%.%{_kit}%::%{_target}'s uuid%}
+	set {_p}'s chestplate to {chestplate.%{_kit}%::%{_target}'s uuid%}
+	set {_p}'s leggings to {leggings.%{_kit}%::%{_target}'s uuid%}
+	set {_p}'s boots to {boots.%{_kit}%::%{_target}'s uuid%}
+	set {_p}'s offhand item to {offhand.%{_kit}%::%{_target}'s uuid%}
+	add 1 to {kitsloaded::%{_p}'s uuid%}
+	loop 36 times:
+		set slot {_c} of {_p}'s inventory to {slot%{_c}%.%{_kit}%::%{_target}'s uuid%}
+		add 1 to {_c}
+	kitNoti({_p})
+				
+				
+				
+on respawn:
+	if {autokit::%player's uuid%} is not set:
+		if {lastkit::%player's uuid%} is set:
+			wait 1 second
+			make player execute command "/k%{lastkit::%player's uuid%}%"
+		else:
+			stop
+
+on join:
+	if {autokit::%player's uuid%} is not set:
+		if {lastkit::%player's uuid%} is set:
+			wait 1 second
+			make player execute command "/k%{lastkit::%player's uuid%}%"
+		else:
+			stop
+
+command /kits:
+	aliases: kit, k, kitmenu
+	trigger:
+		kitMain(player)
+
+command /kit:
+	aliases: kit, k, kitmenu
+	trigger:
+		kitMain(player)
+
+
+function kitMain(p: offlineplayer):
+	set {_a} to 0
+	open chest inventory with 5 rows named "%{@name}% &7- &f%{@version}%" to {_p}
+	wait 1 tick
+	loop 9 times:
+		set slot {_a} of {_p}'s current inventory to black stained glass pane named {@gray_color}
+		add 1 to {_a}
+	set slot 9 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 1" with lore "%{@gray_color}%Left click to load Kit 1" and "%{@gray_color}%Right click to save Kit 1" and "" and "&8Opens kit editing menu"
+	set slot 10 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 2" with lore "%{@gray_color}%Left click to load Kit 2" and "%{@gray_color}%Right click to save Kit 2" and "" and "&8Opens kit editing menu"
+	set slot 11 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 3" with lore "%{@gray_color}%Left click to load Kit 3" and "%{@gray_color}%Right click to save Kit 3" and "" and "&8Opens kit editing menu"
+	set slot 12 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 4" with lore "%{@gray_color}%Left click to load Kit 4" and "%{@gray_color}%Right click to save Kit 4" and "" and "&8Opens kit editing menu"
+	set slot 13 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 5" with lore "%{@gray_color}%Left click to load Kit 5" and "%{@gray_color}%Right click to save Kit 5" and "" and "&8Opens kit editing menu"
+	set slot 14 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 6" with lore "%{@gray_color}%Left click to load Kit 6" and "%{@gray_color}%Right click to save Kit 6" and "" and "&8Opens kit editing menu"
+	set slot 15 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 7" with lore "%{@gray_color}%Left click to load Kit 7" and "%{@gray_color}%Right click to save Kit 7" and "" and "&8Opens kit editing menu"
+	set slot 16 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 8" with lore "%{@gray_color}%Left click to load Kit 8" and "%{@gray_color}%Right click to save Kit 8" and "" and "&8Opens kit editing menu"
+	set slot 17 of {_p}'s current inventory to chest named "%{@yellow_color}%Kit 9" with lore "%{@gray_color}%Left click to load Kit 9" and "%{@gray_color}%Right click to save Kit 9" and "" and "&8Opens kit editing menu"
+	set slot 18, 19, 20, 21, 22, 23, 24, 25, 26 of {_p}'s current inventory to purple stained glass pane named {@gray_color}
+	set slot 22 of {_p}'s current inventory to ender chest named "%{@purple_color}%&lEdit Enderchests" with lore "%{@gray_color}%Click to open enderchest menu."
+	set slot 27 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 1" with lore "%{@gray_color}%Kit 1 Nickname:" and "" and "%{@white_color}%%{kit.1.nickname::%{_p}'s uuid%}%"
+	set slot 28 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 2" with lore "%{@gray_color}%Kit 2 Nickname:" and "" and "%{@white_color}%%{kit.2.nickname::%{_p}'s uuid%}%"
+	set slot 29 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 3" with lore "%{@gray_color}%Kit 3 Nickname:" and "" and "%{@white_color}%%{kit.3.nickname::%{_p}'s uuid%}%"
+	set slot 30 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 4" with lore "%{@gray_color}%Kit 4 Nickname:" and "" and "%{@white_color}%%{kit.4.nickname::%{_p}'s uuid%}%"
+	set slot 31 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 5" with lore "%{@gray_color}%Kit 5 Nickname:" and "" and "%{@white_color}%%{kit.5.nickname::%{_p}'s uuid%}%"
+	set slot 32 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 6" with lore "%{@gray_color}%Kit 6 Nickname:" and "" and "%{@white_color}%%{kit.6.nickname::%{_p}'s uuid%}%"
+	set slot 33 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 7" with lore "%{@gray_color}%Kit 7 Nickname:" and "" and "%{@white_color}%%{kit.7.nickname::%{_p}'s uuid%}%"
+	set slot 34 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 8" with lore "%{@gray_color}%Kit 8 Nickname:" and "" and "%{@white_color}%%{kit.8.nickname::%{_p}'s uuid%}%"
+	set slot 35 of {_p}'s current inventory to knowledge book named "%{@green_color}%Nickname 9" with lore "%{@gray_color}%Kit 9 Nickname:" and "" and "%{@white_color}%%{kit.9.nickname::%{_p}'s uuid%}%"
+	set slot 36 of {_p}'s current inventory to book named "%{@yellow_color}%&lSettings" with lore "%{@gray_color}%Configure your settings."
+	set slot 37 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 38 of {_p}'s current inventory to nether star named "%{@blue_color}%&lPreset Kits" with lore "%{@gray_color}%Click to open preset kits"
+	set slot 4 of {_p}'s current inventory to beacon named {@name} with lore "%{@gray_color}%Made by clapxz" and "%{@gray_color}%Version: %{@white_color}%%{@version}%" and "%{@gray_color}%Build: %{@white_color}%%{@build}%" and "" and "&8ᴄʟᴀᴘxᴢ.ᴄᴏᴍ"
+	set slot 39 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 40 of {_p}'s current inventory to {head.backpack} named "%{@green_color}%&lItems" with lore "%{@gray_color}%Click to open items GUI"
+	set slot 41 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 42 of {_p}'s current inventory to {head.globe} named "%{@pink_color}%&lGlobal Kits" with lore "%{@gray_color}%Click to open global kits"
+	set slot 43 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 44 of {_p}'s current inventory to {head.lava} named "%{@red_color}%&lClear Inventory" with lore "%{@gray_color}%Click to clear your inventory"
+
+
+function kitAdmin(p: offlineplayer):
+	set {_a} to 0
+	open chest inventory with 3 rows named "%{@name}% &7> %{@red_color}%Admin" to {_p}
+	wait 1 tick
+	loop 9 times:
+		set slot {_a} of {_p}'s current inventory to black stained glass pane named {@gray_color}
+		add 1 to {_a}
+	set {_a} to 18
+	loop 9 times:
+		set slot {_a} of {_p}'s current inventory to black stained glass pane named {@gray_color}
+		add 1 to {_a}
+	set slot 4 of {_p}'s current inventory to beacon named {@name} with lore "%{@gray_color}%Made by clapxz" and "%{@gray_color}%Version: %{@white_color}%%{@version}%" and "%{@gray_color}%Build: %{@white_color}%%{@build}%" and "" and "&8ᴄʟᴀᴘxᴢ.ᴄᴏᴍ"
+	set slot 9 of {_p}'s current inventory to {head.backpack} named "%{@yellow_color}%&lChange Kit Room" with lore "%{@gray_color}%This is an up and coming feature!"
+	set slot 10 of {_p}'s current inventory to blue concrete named "%{@blue_color}%&lCreate Preset" with lore "%{@gray_color}%Click to open the preset builder"
+	set slot 11 of {_p}'s current inventory to red concrete named "%{@red_color}%&lDelete Preset" with lore "%{@gray_color}%Click to delete presets"
+	set slot 13 of {_p}'s current inventory to chest named "%{@white_color}%&lAddons" with lore "%{@gray_color}%This is an up and coming feature!"
+	set slot 17 of {_p}'s current inventory to {head.info} named "%{@yellow_color}%&lUpdates" with lore "%{@gray_color}%Click to update" and "" and "&7Requires addon %{@yellow_color}%Updater"
+
+
+command /kitsave <integer>:
+	trigger:
+		if arg-1 is less than 10:
+			editKit(player, arg-1)
+			play sound "block.chest.open" with volume 100 with pitch 1 at player for player
+
+on inventory click:
+	if name of event-inventory is "%{@name}% &7- &f%{@version}%":
+		if event-slot is 40:
+			cancel event
+			kitRoom(player, true)
+		if event-slot is 42:
+			cancel event
+			play sound "block.iron_trapdoor.open" with volume 100 with pitch 1 at player for player
+			globalKits(player, 1)
+		if event-slot is 38:
+			cancel event
+			play sound "block.iron_trapdoor.open" with volume 100 with pitch 1 at player for player
+			presetKits(player, 1)
+		if event-slot is 22:
+			play sound "block.ender_chest.open" with volume 100 with pitch 1 at player for player
+			cancel event
+			make player execute command "/enderchests"
+		if event-slot is 36:
+			play sound "block.shulker_box.open" with volume 100 with pitch 1 at player for player
+			cancel event
+			make player execute command "/kitsettings"
+		if event-slot is 9:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 1"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 1"
+			else:
+				cancel event
+		if event-slot is 44:
+			play sound "entity.generic.burn" with volume 100 with pitch 1.3 at player for player
+			play sound "entity.item.pickup" with volume 100 with pitch 1 at player for player
+			cancel event
+			make player execute command "/clearinv"
+		if event-slot is 10:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 2"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 2"
+			else:
+				cancel event
+		if event-slot is 11:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 3"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 3"
+			else:
+				cancel event
+		if event-slot is 12:
+			if click type is left mouse button:
+				play sound "ui.button.click" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 4"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 4"
+			else:
+				cancel event
+		if event-slot is 13:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 5"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 5"
+			else:
+				cancel event
+		if event-slot is 14:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 6"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 6"
+			else:
+				cancel event
+		if event-slot is 15:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 7"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 7"
+			else:
+				cancel event
+		if event-slot is 16:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 8"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 8"
+			else:
+				cancel event
+		if event-slot is 17:
+			if click type is left mouse button:
+				play sound "item.armor.equip_netherite" with volume 100 with pitch 1 at player for player
+				cancel event
+				make player execute command "/kitload 9"
+			if click type is right mouse button:
+				cancel event
+				make player execute command "/kitsave 9"
+			else:
+				cancel event
+		else:
+			cancel event
+
+command /totems:
+	trigger:
+		set {_e} to 0
+		open chest inventory with 7 rows named "%{@yellow_color}%Totems" to player
+		wait 1 tick
+		play sound "block.nether_gold_ore.hit" with volume 100 with pitch 1 at player for player
+		loop 53 times:
+			set slot {_e} of player's current inventory to totem of undying
+			add 1 to {_e}
+		set slot 53 of player's current inventory to {head.red.back} named "%{@red_color}%Back"
+
+
+on inventory click:
+	if name of event-inventory is "%{@yellow_color}%Totems":
+		if event-slot is 53:
+			play sound "block.nether_gold_ore.hit" with volume 100 with pitch 0.7 at player for player
+			cancel event
+			kitRoom(player, false)
+		else:
+			stop
+
+
+
+
+
+on inventory click:
+	if name of event-inventory is "%{@green_color}%&lItems":
+		if event-slot is 52:
+			play sound "ui.toast.in" with volume 100 with pitch 1 at player for player
+			cancel event
+			kitRoom(player, false)
+		if event-slot is 53:
+			play sound "block.chest.close" with volume 100 with pitch 1 at player for player
+			cancel event
+			kitMain(player)
+		if event-slot is 51:
+			cancel event
+			make player execute command "/totems"
+		if event-slot is 50:
+			cancel event
+			otherStuff(player)
+		else:
+			stop
+
+
+on inventory click:
+	if name of event-inventory is "%{@red_color}%Other Stuff":
+		if event-slot is 53:
+			play sound "minecraft:block.smithing_table.use" with volume 100 with pitch 1 at player for player
+			cancel event
+			kitRoom(player, false)
+		else:
+			stop
+
+function otherStuff(p: offlineplayer):
+	set {_e} to 0
+	open chest inventory with 7 rows named "%{@red_color}%Other Stuff" to {_p}
+	wait 1 tick
+	play sound "minecraft:block.smithing_table.use" with volume 100 with pitch 1.3 at {_p} for {_p}
+	set slot 0 of {_p}'s current inventory to 64 sentry armour smithing template
+	set slot 1 of {_p}'s current inventory to 64 vex armour smithing template
+	set slot 2 of {_p}'s current inventory to 64 wild armour smithing template
+	set slot 3 of {_p}'s current inventory to 64 coast armour smithing template
+	set slot 4 of {_p}'s current inventory to 64 dune armour smithing template
+	set slot 5 of {_p}'s current inventory to 64 wayfinder armour smithing template
+	set slot 6 of {_p}'s current inventory to 64 raiser armour smithing template
+	set slot 7 of {_p}'s current inventory to 64 shaper armour smithing template
+	set slot 8 of {_p}'s current inventory to 64 host armour smithing template
+	set slot 9 of {_p}'s current inventory to 64 ward armour smithing template
+	set slot 10 of {_p}'s current inventory to 64 silence armour smithing template
+	set slot 11 of {_p}'s current inventory to 64 tide armour smithing template
+	set slot 12 of {_p}'s current inventory to 64 snout armour smithing template
+	set slot 13 of {_p}'s current inventory to 64 rib armour smithing template
+	set slot 14 of {_p}'s current inventory to 64 eye armour smithing template
+	set slot 15 of {_p}'s current inventory to 64 spire armour smithing template
+	set slot 16 of {_p}'s current inventory to 64 netherite armour smithing template
+	set slot 17 of {_p}'s current inventory to 64 smithing table
+	set slot 18 of {_p}'s current inventory to 64 iron ingot
+	set slot 19 of {_p}'s current inventory to 64 copper ingot
+	set slot 20 of {_p}'s current inventory to 64 gold ingot
+	set slot 21 of {_p}'s current inventory to 64 emerald
+	set slot 22 of {_p}'s current inventory to 64 lapis lazuli
+	set slot 23 of {_p}'s current inventory to 64 diamond
+	set slot 24 of {_p}'s current inventory to 64 netherite ingot
+	set slot 25 of {_p}'s current inventory to 64 redstone
+	set slot 26 of {_p}'s current inventory to 64 amethyst shard
+	set slot 27 of {_p}'s current inventory to 64 redstone block
+	set slot 28 of {_p}'s current inventory to 64 redstone torch
+	set slot 29 of {_p}'s current inventory to 64 tnt
+	set slot 30 of {_p}'s current inventory to 64 sticky piston
+	set slot 31 of {_p}'s current inventory to 64 piston
+	set slot 32 of {_p}'s current inventory to 64 trapped chest
+	set slot 33 of {_p}'s current inventory to 64 chest
+	set slot 34 of {_p}'s current inventory to 64 lever
+	set slot 35 of {_p}'s current inventory to 64 stone button
+	set slot 36 of {_p}'s current inventory to trident
+	set slot 37 of {_p}'s current inventory to spyglass
+	set slot 38 of {_p}'s current inventory to boat
+	set slot 39 of {_p}'s current inventory to 64 powered rail
+	set slot 40 of {_p}'s current inventory to 64 sponge
+	set slot 41 of {_p}'s current inventory to fishing rod of unbreaking 3 and mending 1
+	set slot 42 of {_p}'s current inventory to 64 slime block
+	set slot 43 of {_p}'s current inventory to 16 snowball
+	set slot 44 of {_p}'s current inventory to 16 egg
+	set slot 45 of {_p}'s current inventory to 16 armor stand
+	set slot 46 of {_p}'s current inventory to 64 bell
+	set slot 47 of {_p}'s current inventory to diamond horse armour
+	set slot 48 of {_p}'s current inventory to 64 horse spawn egg
+	set slot 49 of {_p}'s current inventory to 64 donkey spawn egg
+	set slot 50 of {_p}'s current inventory to 64 door
+	set slot 51 of {_p}'s current inventory to lava bucket
+	set slot 52 of {_p}'s current inventory to water bucket
+	set slot 53 of {_p}'s current inventory to {head.red.back} named "%{@red_color}%Back"
+
+function kitRoom(p: offlineplayer, n: boolean):
+	open chest inventory with 9 rows named "%{@green_color}%&lItems" to {_p}
+	wait 1 tick
+	set slot 0 of {_p}'s current inventory to {i.helmet}
+	set slot 1 of {_p}'s current inventory to {i.chestplate}
+	set slot 2 of {_p}'s current inventory to {i.leggings}
+	set slot 3 of {_p}'s current inventory to {i.boots}
+	set slot 4 of {_p}'s current inventory to {i.sword1}
+	set slot 5 of {_p}'s current inventory to {i.sword2}
+	set slot 6 of {_p}'s current inventory to {i.pick}
+	set slot 7 of {_p}'s current inventory to 64 ender chest 
+	set slot 8 of {_p}'s current inventory to {i.axe}
+	set slot 9 of {_p}'s current inventory to 64 obsidian
+	set slot 10 of {_p}'s current inventory to 64 end crystal
+	set slot 11 of {_p}'s current inventory to 64 respawn anchor
+	set slot 12 of {_p}'s current inventory to 64 glowstone
+	set slot 13 of {_p}'s current inventory to {i.ely}
+	set slot 14 of {_p}'s current inventory to {i.firework}
+	set slot 15 of {_p}'s current inventory to {i.shield}
+	set slot 16 of {_p}'s current inventory to {i.crossbow1}
+	set slot 17 of {_p}'s current inventory to {i.crossbow2}
+	set slot 18 of {_p}'s current inventory to 64 obsidian
+	set slot 19 of {_p}'s current inventory to 64 end crystal
+	set slot 20 of {_p}'s current inventory to 64 respawn anchor
+	set slot 21 of {_p}'s current inventory to 64 glowstone
+	set slot 22 of {_p}'s current inventory to {i.sf}
+	set slot 23 of {_p}'s current inventory to 64 cobwebs
+	set slot 24 of {_p}'s current inventory to 64 rails
+	set slot 25 of {_p}'s current inventory to minecart with tnt
+	set slot 26 of {_p}'s current inventory to shulker box
+	set slot 27 of {_p}'s current inventory to 16 ender pearl
+	set slot 28 of {_p}'s current inventory to 16 ender pearl
+	set slot 29 of {_p}'s current inventory to 16 ender pearl
+	set slot 30 of {_p}'s current inventory to 64 golden apple
+	set slot 31 of {_p}'s current inventory to 64 golden apple
+	set slot 32 of {_p}'s current inventory to 64 golden apple
+	set slot 33 of {_p}'s current inventory to {i.xp}
+	set slot 34 of {_p}'s current inventory to {i.xp}
+	set slot 35 of {_p}'s current inventory to {i.xp}
+	set slot 36 of {_p}'s current inventory to {i.dhelmet}
+	set slot 37 of {_p}'s current inventory to {i.dchestplate}
+	set slot 38 of {_p}'s current inventory to {i.dleggings}
+	set slot 39 of {_p}'s current inventory to {i.dboots}
+	set slot 40 of {_p}'s current inventory to {i.dsword1}
+	set slot 41 of {_p}'s current inventory to {i.dsword2}
+	set slot 42 of {_p}'s current inventory to {i.turtle1}
+	set slot 43 of {_p}'s current inventory to {i.turtle1}
+	set slot 44 of {_p}'s current inventory to {i.speed}
+	set slot 45 of {_p}'s current inventory to {i.strength}
+	set slot 46 of {_p}'s current inventory to {i.invis}
+	set slot 47 of {_p}'s current inventory to {i.fireres}
+	set slot 48 of {_p}'s current inventory to {i.bow}
+	set slot 49 of {_p}'s current inventory to 64 arrow
+	set slot 50 of {_p}'s current inventory to smithing table named "%{@red_color}%Other Stuff" with lore "%{@gray_color}%Click to open other stuff gui"
+	set slot 51 of {_p}'s current inventory to totem of undying named "%{@yellow_color}%Totems GUI" with lore "%{@gray_color}%Click to open totem gui"
+	set slot 52 of {_p}'s current inventory to {head.refresh} named "%{@white_color}%Refresh Items" with lore "%{@gray_color}%Click to refresh items"
+	set slot 53 of {_p}'s current inventory to {head.red.back} named "%{@red_color}%&lBack" with lore "%{@gray_color}%Click to go back"
+	if {_n} is true:
+		roomNoti({_p})
+		play sound "block.chest.open" with volume 100 with pitch 1 at {_p} for {_p}
+		stop
+	else:
+		stop
+
+
+
+
+
+command /k1:
+	aliases: kit1
+	trigger:
+		if {kit.1::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 1
+			set player's helmet to {helmet.1.1::%player's uuid%}
+			set player's chestplate to {chestplate.1::%player's uuid%}
+			set player's leggings to {leggings.1::%player's uuid%}
+			set player's boots to {boots.1::%player's uuid%}
+			set player's offhand item to {offhand.1::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.1::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00>Kit<##12FB00>&l 1<##12FB00> loaded"
+			kitNoti(player)
+		else:
+			send "&4%{@red_color}%This kit does not exist"
+
+
+
+command /k2:
+	aliases: kit2
+	trigger:
+		if {kit.2::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 2
+			set player's helmet to {helmet.2.2::%player's uuid%}
+			set player's chestplate to {chestplate.2::%player's uuid%}
+			set player's leggings to {leggings.2::%player's uuid%}
+			set player's boots to {boots.2::%player's uuid%}
+			set player's offhand item to {offhand.2::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.2::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 2 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "&4%{@red_color}%This kit does not exist"
+
+
+
+
+command /k3:
+	aliases: kit3
+	trigger:
+		if {kit.3::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 3
+			set player's helmet to {helmet.3.3::%player's uuid%}
+			set player's chestplate to {chestplate.3::%player's uuid%}
+			set player's leggings to {leggings.3::%player's uuid%}
+			set player's boots to {boots.3::%player's uuid%}
+			set player's offhand item to {offhand.3::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.3::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 3 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "&4%{@red_color}%This kit does not exist"
+
+
+
+
+
+command /k4:
+	aliases: kit4
+	trigger:
+		if {kit.4::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 4
+			set player's helmet to {helmet.4.4::%player's uuid%}
+			set player's chestplate to {chestplate.4::%player's uuid%}
+			set player's leggings to {leggings.4::%player's uuid%}
+			set player's boots to {boots.4::%player's uuid%}
+			set player's offhand item to {offhand.4::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.4::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 4 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "&4%{@red_color}%This kit does not exist"
+
+
+
+
+
+command /k5:
+	aliases: kit5
+	trigger:
+		if {kit.5::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 5
+			set player's helmet to {helmet.5.5::%player's uuid%}
+			set player's chestplate to {chestplate.5::%player's uuid%}
+			set player's leggings to {leggings.5::%player's uuid%}
+			set player's boots to {boots.5::%player's uuid%}
+			set player's offhand item to {offhand.5::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.5::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 5 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "%{@purple_color}%%{@red_color}%This kit does not exist"
+
+
+
+
+
+
+
+
+
+command /k6:
+	aliases: kit6
+	trigger:
+		if {kit.6::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 6
+			set player's helmet to {helmet.6.6::%player's uuid%}
+			set player's chestplate to {chestplate.6::%player's uuid%}
+			set player's leggings to {leggings.6::%player's uuid%}
+			set player's boots to {boots.6::%player's uuid%}
+			set player's offhand item to {offhand.6::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.6::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 6 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "<##FB9B08>%{@red_color}%This kit does not exist"
+
+
+
+
+
+
+
+
+command /k7:
+	aliases: kit7
+	trigger:
+		if {kit.7::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 7
+			set player's helmet to {helmet.7.7::%player's uuid%}
+			set player's chestplate to {chestplate.7::%player's uuid%}
+			set player's leggings to {leggings.7::%player's uuid%}
+			set player's boots to {boots.7::%player's uuid%}
+			set player's offhand item to {offhand.7::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.7::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 7 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "%{@gray_color}%%{@red_color}%This kit does not exist"
+
+
+command /k8:
+	aliases: kit8
+	trigger:
+		if {kit.8::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 8
+			set player's helmet to {helmet.8.8::%player's uuid%}
+			set player's chestplate to {chestplate.8::%player's uuid%}
+			set player's leggings to {leggings.8::%player's uuid%}
+			set player's boots to {boots.8::%player's uuid%}
+			set player's offhand item to {offhand.8::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.8::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 8 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "&8%{@red_color}%This kit does not exist"
+
+
+
+
+
+
+
+
+
+
+command /k9:
+	aliases: kit9
+	trigger:
+		if {kit.9::%player's uuid%} is set:
+			set {_c} to 0
+			set {lastkit::%player's uuid%} to 9
+			set player's helmet to {helmet.9.9::%player's uuid%}
+			set player's chestplate to {chestplate.9::%player's uuid%}
+			set player's leggings to {leggings.9::%player's uuid%}
+			set player's boots to {boots.9::%player's uuid%}
+			set player's offhand item to {offhand.9::%player's uuid%}
+			add 1 to {kitsloaded::%player's uuid%}
+			loop 36 times:
+				set slot {_c} of player's inventory to {slot%{_c}%.9::%player's uuid%}
+				add 1 to {_c}
+			send "<##12FB00><##12FB00>Kit<##12FB00>&l&l 9 <##12FB00>loaded"
+			kitNoti(player)
+		else:
+			send "<##7289DA>%{@red_color}%This kit does not exist"
+
+
+
+
+on inventory click:
+	if name of event-inventory is "%{@yellow_color}%sᴇᴛᴛɪɴɢs":
+		if event-slot is 0:
+			cancel event
+			play sound "ui.button.click" with volume 100 with pitch 1 at player for player
+			play sound "entity.experience_orb.pickup" with volume 100 with pitch 1 at player for player
+			if {autokit::%player's uuid%} is not set:
+				set {autokit::%player's uuid%} to true
+				set {autokitVisual::%player's uuid%} to "%{@red_color}%&lᴅɪsᴀʙʟᴇᴅ"
+				set slot 0 of player's current inventory to chest named "%{@gray_color}%Auto Kit" with lore "%{@gray_color}%Loads ur last loaded kit on respawn." and "" and "%{@gray_color}%Currently: %{autokitVisual::%player's uuid%}%"
+			else:
+				delete {autokit::%player's uuid%}
+				set {autokitVisual::%player's uuid%} to "%{@green_color}%&lᴇɴᴀʙʟᴇᴅ"
+				set slot 0 of player's current inventory to chest named "%{@gray_color}%Auto Kit" with lore "%{@gray_color}%Loads ur last loaded kit on respawn." and "" and "%{@gray_color}%Currently: %{autokitVisual::%player's uuid%}%"
+		if event-slot is 1:
+			cancel event
+			play sound "ui.button.click" with volume 100 with pitch 1 at player for player
+			play sound "entity.experience_orb.pickup" with volume 100 with pitch 1 at player for player
+			if {noti::%player's uuid%} is not set:
+				set {noti::%player's uuid%} to true
+				set {notiVisual::%player's uuid%} to "%{@red_color}%&lᴅɪsᴀʙʟᴇᴅ"
+				set slot 1 of player's current inventory to note block named "%{@green_color}%Notfications" with lore "%{@gray_color}%Sends notifications in chat when people load thier kit, etc." and "" and "%{@gray_color}%Currently: %{notiVisual::%player's uuid%}%"
+			else:
+				delete {noti::%player's uuid%}
+				set {notiVisual::%player's uuid%} to "%{@green_color}%&lᴇɴᴀʙʟᴇᴅ"
+				set slot 1 of player's current inventory to note block named "%{@green_color}%Notfications" with lore "%{@gray_color}%Sends notifications in chat when people load thier kit, etc." and "" and "%{@gray_color}%Currently: %{notiVisual::%player's uuid%}%"
+		if event-slot is 44:
+			cancel event
+			play sound "block.shulker_box.close" with volume 100 with pitch 1 at player for player
+			make player execute command "/k"
+		else:
+			cancel event
+
+
+command /kitsettings:
+	trigger:
+		if {autokitVisual::%player's uuid%} is not set:
+			set {autokitVisual::%player's uuid%} to "%{@green_color}%&lᴇɴᴀʙʟᴇᴅ"
+		if {notiVisual::%player's uuid%} is not set:
+			set {notiVisual::%player's uuid%} to "%{@green_color}%&lᴇɴᴀʙʟᴇᴅ"
+		open chest inventory with 5 rows named "%{@yellow_color}%sᴇᴛᴛɪɴɢs" to player
+		wait 1 tick
+		set slot 0 of player's current inventory to chest named "<##FB9B08>Auto Kit" with lore "%{@gray_color}%Loads ur last loaded kit on respawn." and "" and "%{@gray_color}%Currently: %{autokitVisual::%player's uuid%}%"
+		set slot 1 of player's current inventory to note block named "%{@green_color}%Notfications" with lore "%{@gray_color}%Sends notifications in chat when people load thier kit, etc." and "" and "%{@gray_color}%Currently: %{notiVisual::%player's uuid%}%"
+		set slot 44 of player's current inventory to {head.red.back} named "%{@red_color}%<-" with lore "%{@gray_color}%Click to go back to main menu"
+
+
+
+command /enderchests:
+	trigger:
+		open chest inventory with 1 rows named "<##7289DA>&l%player%'s Enderchests" to player
+		wait 1 tick
+		set slot 0 of player's current inventory to ender chest named "%{@purple_color}%&lEnderchest 1" with lore "%{@white_color}%Left click%{@gray_color}% to load" and "" and "%{@white_color}%Right click%{@gray_color}% to edit"
+		set slot 1 of player's current inventory to ender chest named "%{@purple_color}%&lEnderchest 2" with lore "%{@white_color}%Left click%{@gray_color}% to load" and "" and "%{@white_color}%Right click%{@gray_color}% to edit"
+		set slot 2 of player's current inventory to ender chest named "%{@purple_color}%&lEnderchest 3" with lore "%{@white_color}%Left click%{@gray_color}% to load" and "" and "%{@white_color}%Right click%{@gray_color}% to edit"
+		set {_c} to 3
+		loop 6 times:
+			set slot {_c} of player's current inventory to black stained glass pane named "%{@gray_color}%&lCOMING SOON"
+			add 1 to {_c}
+
+command /ec1:
+	trigger:
+		loadEC(player, 1)
+		send "<##7289DA>Enderchest 1 Loaded!"
+command /ec2:
+	trigger:
+		loadEC(player, 2)
+		send "<##7289DA>Enderchest 2 Loaded!"
+command /ec3:
+	trigger:
+		loadEC(player, 3)
+		send "<##7289DA>Enderchest 3 Loaded!"
+
+
+on inventory click:
+	if name of event-inventory contains "Enderchests":
+		cancel event
+		if event-slot is 0:
+			if click type is right mouse button:
+				editEC(player, 1)
+				play sound "block.barrel.open" with volume 100 with pitch 1 at player for player
+			else:
+				loadEC(player, 1)
+				send "<##7289DA>Enderchest Loaded!"
+				close player's inventory
+		if event-slot is 1:
+			if click type is right mouse button:
+				editEC(player, 2)
+				play sound "block.barrel.open" with volume 100 with pitch 1 at player for player
+			else:
+				loadEC(player, 2)
+				send "<##7289DA>Enderchest Loaded!"
+				close player's inventory
+		if event-slot is 2:
+			if click type is right mouse button:
+				editEC(player, 3)
+				play sound "block.barrel.open" with volume 100 with pitch 1 at player for player
+			else:
+				loadEC(player, 3)
+				send "<##7289DA>Enderchest Loaded!"
+				close player's inventory
+
+on inventory click:
+	if name of event-inventory contains "Enderchest Edit - 1":
+		cancel event
+		if event-slot is 27:
+			make player execute command "/enderchests"
+			play sound "block.barrel.close" with volume 100 with pitch 1 at player for player
+		if event-slot is 34:
+			importEC(player)
+			play sound "entity.ender_eye.death" with volume 100 with pitch 1 at player for player
+		if event-slot is 35:
+			saveEC(player, 1)
+			wait 1 tick
+			make player execute command "/enderchests"
+			play sound "block.barrel.open" with volume 100 with pitch 1 at player for player
+			send "<##7289DA>Enderchest 1 Saved!"
+
+on inventory click:
+	if name of event-inventory contains "Enderchest Edit - 2":
+		cancel event
+		if event-slot is 27:
+			make player execute command "/enderchests"
+			play sound "block.barrel.close" with volume 100 with pitch 1 at player for player
+		if event-slot is 34:
+			importEC(player)
+			play sound "entity.ender_eye.death" with volume 100 with pitch 1 at player for player
+		if event-slot is 35:
+			saveEC(player, 2)
+			wait 1 tick
+			make player execute command "/enderchests"
+			play sound "block.barrel.open" with volume 100 with pitch 1 at player for player
+			send "<##7289DA>Enderchest 2 Saved!"
+
+on inventory click:
+	if name of event-inventory contains "Enderchest Edit - 3":
+		cancel event
+		if event-slot is 27:
+			make player execute command "/enderchests"
+			play sound "block.barrel.close" with volume 100 with pitch 1 at player for player
+		if event-slot is 34:
+			importEC(player)
+			play sound "entity.ender_eye.death" with volume 100 with pitch 1 at player for player
+		if event-slot is 35:
+			saveEC(player, 3)
+			wait 1 tick
+			make player execute command "/enderchests"
+			play sound "block.barrel.open" with volume 100 with pitch 1 at player for player
+			send "<##7289DA>Enderchest 3 Saved!"
+
+function importEC(p: offlineplayer):
+	set {_c} to 0
+	loop 27 times:
+		set slot {_c} of {_p}'s current inventory to slot {_c} of {_p}'s ender chest 
+		add 1 to {_c}
+
+function saveEC(p: offlineplayer, n: integer):
+	set {_c} to 0
+	loop 27 times:
+		set {ecslot%{_c}%.%{_n}%::%{_p}'s uuid%} to slot {_c} of {_p}'s current inventory
+		add 1 to {_c}
+
+function loadEC(p: offlineplayer, n: integer):
+	set {_c} to 0
+	loop 27 times:
+		set slot {_c} of {_p}'s ender chest  to {ecslot%{_c}%.%{_n}%::%{_p}'s uuid%}
+		add 1 to {_c}
+	ecNoti({_p})
+
+
+function editEC(p: offlineplayer, n: integer):
+	open chest inventory with 4 rows named "<##7289DA>&lEnderchest Edit - %{_n}%" to {_p}
+	wait 1 tick
+	set {_c} to 0
+	loop 27 times:
+		set slot {_c} of {_p}'s current inventory to {ecslot%{_c}%.%{_n}%::%{_p}'s uuid%}
+		add 1 to {_c}
+	set slot 34 of {_p}'s current inventory to ender chest named "<##7289DA>&lIMPORT CURRENT ENDERCHEST"
+	set slot 27 of {_p}'s current inventory to red wool named "%{@red_color}%&lCANCEL"
+	set slot 35 of {_p}'s current inventory to lime wool named "%{@green_color}%&lSAVE AND QUIT"
+
+function globalKits(p: offlineplayer, page: number):
+	set {_slot} to 0
+	set {_pageVis} to size of {globalKits::*}
+	set {_pageVis} to {_pageVis} / 45
+	if {_pageVis} is less than or equal to 0:
+		add 1 to {_pageVis}
+	set {_pageVis} to ceil({_pageVis})
+	set {_maxPage} to ceil({_pageVis})
+	set {_pageVis} to "%{_page}%/%{_pageVis}%"
+	open chest inventory with 10 rows named "%{@pink_color}%&lGlobal Kits%{@white_color}% &7(%{_pageVis}%)" to {_p}
+	wait 1 tick
+	set {_pageStart} to 1 + 45 * ({_page} - 1)
+	loop 45 times:
+		set {_id} to {globalKits::%{_pageStart}%}
+		delete {_parts::*}
+		set {_parts::*} to "%{_id}%" split at "."
+		set {_Player} to {_parts::2} parsed as an offlineplayer
+		set {_Kit} to {_parts::1} parsed as an integer
+		if {_slot} < 45:
+			if {_id} is set:
+				if {kit.%{_Kit}%.nickname::%{_Player}'s uuid%} is not set:
+					set {_nickname} to "None"
+				else:
+					set {_nickname} to {kit.%{_Kit}%.nickname::%{_Player}'s uuid%}
+				set slot {_slot} of {_p}'s current inventory to skull of {_Player} named "%{@gray_color}%&f%{_Player}%&7's &fKit&7 &f##%{_Kit}%" with lore "&7Kit Nickname: <##7289DA>%{_nickname}%" and "" and "%{@gray_color}%➥ %{@green_color}%Left Click&7 to load" and "%{@gray_color}%➥ <##FF0000>Right Click&7 to preview" and "" and "&8Player: %{_Player}%"  and "&8Kit: %{_Kit}%"
+				add 1 to {_slot}
+				add 1 to {_pageStart}
+			else:
+				add 1 to {_pageStart}
+		else:
+			exit loop
+	if {_page} is less than {_maxPage}:
+		set slot 53 of {_p}'s current inventory to arrow named "%{@gray_color}%ɴᴇxᴛ ᴘᴀɢᴇ" with lore "%{@gray_color}%Click to navigate."
+	else:
+		set slot 53 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	if {_page} is not 1:
+		set slot 45 of {_p}'s current inventory to arrow named "%{@gray_color}%ᴘʀᴇᴠɪᴏᴜs ᴘᴀɢᴇ" with lore "%{@gray_color}%Click to navigate."
+	else:
+		set slot 45 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 46,47,48,49,50,51,52 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 49 of {_p}'s current inventory to {head.red.back} named "<##FF0000>&lBACK" with lore "%{@gray_color}%Click to return."
+
+on inventory click:
+	if name of player's current inventory contains "&lGlobal Kits":
+		cancel event
+		event-inventory is not player's inventory
+		set {_e} to name of player's current inventory
+		replace all "%{@pink_color}%&lGlobal Kits%{@white_color}% &7" in {_e} with ""
+		replace all ")" in {_e} with ""
+		replace all "(" in {_e} with ""
+		set {_parts::*} to {_e} split at "/"
+		set {_e} to {_parts::1}
+		set {_a} to {_e}
+		if index of event-slot is 53:
+			event-slot is an arrow
+			set {_a} to {_a} parsed as an integer
+			set {_an} to {_a} + 1
+			globalKits(player, {_an})
+			play sound "item.book.page_turn" at volume 100 at player for player
+		if index of event-slot is 45:
+			event-slot is an arrow
+			set {_a} to {_a} parsed as an integer
+			set {_an2} to {_a} - 1
+			if {_an2} is more than 0:
+				globalKits(player, {_an2})
+				play sound "item.book.page_turn" at volume 100 at player for player
+			else:
+				stop
+		else:
+			if event-slot is a player head:
+				event-slot is not {head.red.back}
+				event-slot is not {head.globe}
+				play sound "block.dispenser.fail" with volume 5 with pitch 1 at player for player
+				if click type is left mouse button:
+					set {_e} to line 6 of event-slot's lore
+					replace all "&8Player: " in {_e} with ""
+					set {_e} to {_e} parsed as an offlineplayer
+					set {_kit} to line 7 of event-slot's lore
+					replace all "&8Kit: " in {_kit} with ""
+					set {_kit} to {_kit} parsed as an integer
+					stealKit(player, {_e}, {_kit})
+				if click type is right mouse button:
+					set {_e} to line 6 of event-slot's lore
+					replace all "&8Player: " in {_e} with ""
+					set {_e} to {_e} parsed as an offlineplayer
+					set {_kit} to line 7 of event-slot's lore
+					replace all "&8Kit: " in {_kit} with ""
+					set {_kit} to {_kit} parsed as an integer
+					previewKit(player, {_kit}, {_e})
+				else:
+					cancel event
+		if index of event-slot is 49:
+			kitMain(player)
+			play sound "block.iron_trapdoor.close" with volume 100 with pitch 1 at player for player
+	
+
+function presetKits(p: offlineplayer, page: number):
+	set {_slot} to 0
+	set {_pageVis} to size of {presetKits::*}
+	set {_pageVis} to {_pageVis} / 45
+	if {_pageVis} is less than or equal to 0:
+		add 1 to {_pageVis}
+	set {_pageVis} to ceil({_pageVis})
+	set {_maxPage} to ceil({_pageVis})
+	set {_pageVis} to "%{_page}%/%{_pageVis}%"
+	open chest inventory with 10 rows named "%{@yellow_color}%&lPreset Kits &7(%{_pageVis}%)" to {_p}
+	wait 1 tick
+	set {_pageStart} to 1 + 45 * ({_page} - 1)
+	if size of {presetKits::*} is not set:
+		set slot 22 of {_p}'s current inventory to barrier named "%{@red_color}%Nothing to see here..."
+	loop 45 times:
+		set {_id} to {presetKits::%{_pageStart}%}
+		if {_slot} < 45:
+			if {_id} is set:
+				set slot {_slot} of {_p}'s current inventory to chest named "&7Preset %{@yellow_color}%%{_id}%" with lore "&7Creator: %{@yellow_color}%%{presetCreator::%{_id}%}%" and "" and "%{@gray_color}%➥ %{@green_color}%Left Click&7 to load" and "%{@gray_color}%➥ <##FF0000>Right Click&7 to preview" and ""
+				add 1 to {_slot}
+				add 1 to {_pageStart}
+			else:
+				add 1 to {_pageStart}
+		else:
+			exit loop
+	if {_page} is less than {_maxPage}:
+		set slot 53 of {_p}'s current inventory to arrow named "%{@gray_color}%ɴᴇxᴛ ᴘᴀɢᴇ" with lore "%{@gray_color}%Click to navigate."
+	else:
+		set slot 53 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	if {_page} is not 1:
+		set slot 45 of {_p}'s current inventory to arrow named "%{@gray_color}%ᴘʀᴇᴠɪᴏᴜs ᴘᴀɢᴇ" with lore "%{@gray_color}%Click to navigate."
+	else:
+		set slot 45 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 46,47,48,49,50,51,52 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 49 of {_p}'s current inventory to {head.red.back} named "<##FF0000>&lBACK" with lore "%{@gray_color}%Click to return."
+	if {_p} has permission "crystalkits.admin":
+		set slot 48, 50 of {_p}'s current inventory to white stained glass pane named "&fPresets" with lore "&7Creation: %{@yellow_color}%/crystalkits preset create [name]" and "&7Deletion: <##FF0000>/crystalkits preset delete [name]"
+
+on inventory click:
+	if name of player's current inventory contains "%{@yellow_color}%&lPreset Kits":
+		cancel event
+		event-inventory is not player's inventory
+		set {_e} to name of player's current inventory
+		replace all "%{@yellow_color}%&lPreset Kits &7" in {_e} with ""
+		replace all ")" in {_e} with ""
+		replace all "(" in {_e} with ""
+		set {_parts::*} to {_e} split at "/"
+		set {_e} to {_parts::1}
+		set {_a} to {_e}
+		if index of event-slot is 53:
+			event-slot is an arrow
+			set {_a} to {_a} parsed as an integer
+			set {_an} to {_a} + 1
+			presetKits(player, {_an})
+			play sound "item.book.page_turn" at volume 100 at player for player
+		if index of event-slot is 45:
+			event-slot is an arrow
+			set {_a} to {_a} parsed as an integer
+			set {_an2} to {_a} - 1
+			if {_an2} is more than 0:
+				presetKits(player, {_an2})
+				play sound "item.book.page_turn" at volume 100 at player for player
+			else:
+				stop
+		else:
+			if event-slot is a chest:
+				event-slot is not {head.red.back}
+				event-slot is not {head.globe}
+				play sound "block.dispenser.fail" with volume 5 with pitch 1 at player for player
+				if click type is left mouse button:
+					set {_e} to name of event-slot
+					replace all "&7Preset %{@yellow_color}%" in {_e} with ""
+					loadPreset(player, {_e})
+				if click type is right mouse button:
+					set {_e} to name of event-slot
+					replace all "&7Preset %{@yellow_color}%" in {_e} with ""
+					previewPreset(player, {_e})
+				else:
+					cancel event
+		if index of event-slot is 49:
+			kitMain(player)
+			play sound "block.iron_trapdoor.close" with volume 100 with pitch 1 at player for player
+
+
+command /createpresetkit [<text>]:
+	permission: crystalkits.admin
+	trigger:
+		if arg-1 is set:
+			if {presetKits::*} does not contain arg-1:
+				createPreset(player, arg-1)
+				send "&f[%{@name}%&f]&7 Preset Created"
+			else:
+				send "&f[%{@name}%&f]&7 That preset already exists."
+
+
+command /crystalkits [<text>] [<text>] [<text>]:
+	permission: crystalkits.admin
+	trigger:
+		if arg-1 is "preset":
+			if arg-2 is "create":
+				if arg-3 is set:
+					if {presetKits::*} does not contain arg-3:
+						createPreset(player, arg-3)
+						send "&f[%{@name}%&f]&7 Preset Created"
+					else:
+						send "&f[%{@name}%&f]&7 That preset already exists."
+				else:
+					send "&f[%{@name}%&f]&7 Specify a name."
+			if arg-2 is "delete":
+				deletePreset(arg-3)
+				send "&f[%{@name}%&f]&7 Preset Deleted."
+			else if arg-2 is not "delete" or "create":
+				send "&f[%{@name}%&f]&7 Usage: /crystalkits preset [create/delete] [name]"
+		else if arg-1 is not "update" or "help" or "support" or "info":
+			send "&f[%{@name}%&f]&7 Unknown Argument(s)"
+		else if arg-1 is "update":
+			send "&f[%{@name}%&f]&7 Updates: <link:https://builtbybit.com/resources/crystal-kits.46717/>%{@yellow_color}%&nClick Here"
+		else if arg-1 is "help" or "support":
+			send "&f[%{@name}%&f]&7 Support Discord: <link:https://discord.gg/fMZqWf5wTN>%{@yellow_color}%&nClick Here"
+		else if arg-1 is "info":
+			send "&f[%{@name}%&f]&7 You are running &fCrystalKits v%{@version}% &7- &fBuild %{@build}%"
+
+on tab complete for "/crystalkits":
+	add "preset" to {_e::*}
+	add "support" to {_e::*}
+	add "info" to {_e::*}
+	add "update" to {_e::*}
+	add "create" to {_e2::*}
+	add "delete" to {_e2::*}
+	set tab completions for position 1 to {_e::*}
+	set tab completions for position 2 to {_e2::*}
+
+
+function createPreset(creator: offlineplayer, name: text):
+	set {_c} to 0
+	loop 36 times:
+		set {Presets.slot%{_c}%::%{_name}%} to slot {_c} of {_creator}'s inventory
+		add 1 to {_c}
+	set {Presets.helmet::%{_name}%} to {_creator}'s helmet
+	set {Presets.chestplate::%{_name}%} to {_creator}'s chestplate
+	set {Presets.leggings::%{_name}%} to {_creator}'s leggings
+	set {Presets.boots::%{_name}%} to {_creator}'s boots
+	set {Presets.offhand::%{_name}%} to {_creator}'s offhand item
+	add {_name} to {presetKits::*}
+	set {presetCreator::%{_name}%} to {_creator}
+
+
+function deletePreset(name: text):
+	set {_c} to 0
+	loop 36 times:
+		delete {Presets.slot%{_c}%::%{_name}%}
+		add 1 to {_c}
+	delete {Presets.helmet::%{_name}%}
+	delete {Presets.chestplate::%{_name}%}
+	delete {Presets.leggings::%{_name}%}
+	delete {Presets.boots::%{_name}%}
+	delete {Presets.offhand::%{_name}%}
+	remove {_name} from {presetKits::*}
+	delete {presetCreator::%{_name}%}
+
+function loadPreset(p: offlineplayer, name: text):
+	set {_c} to 0
+	set {_p}'s helmet to {Presets.helmet::%{_name}%}
+	set {_p}'s chestplate to {Presets.chestplate::%{_name}%}
+	set {_p}'s leggings to {Presets.leggings::%{_name}%}
+	set {_p}'s boots to {Presets.boots::%{_name}%}
+	set {_p}'s offhand item to {Presets.offhand::%{_name}%} 
+	loop 36 times:
+		set slot {_c} of {_p}'s inventory to {Presets.slot%{_c}%::%{_name}%}
+		add 1 to {_c}
+	kitNoti({_p})
+
+function deletePresetData():
+	delete {Presets.offhand::*}
+	delete {Presets.boots::*}
+	delete {Presets.chestplate::*}
+	delete {Presets.helmet::*}
+	delete {Presets.leggings::*}
+	delete {presetCreator::*}
+	delete {presetKits::*}
+	loop 50 times:
+		delete {Presets.slot%{_c}%::*}
+		add 1 to {_c}
+	send "&cPreset data deleted" to console
+
+
+
+function previewPreset(p: offlineplayer, name: text):
+	open chest inventory with 7 rows named "%{@gray_color}%Preview Preset - %{@yellow_color}%%{_name}%" to {_p}
+	wait 1 tick
+	set {_c} to 0
+	loop 36 times:
+		set slot {_c} of {_p}'s current inventory to {Presets.slot%{_c}%::%{_name}%}
+		add 1 to {_c}
+	set slot 36 of {_p}'s current inventory to {Presets.boots::%{_name}%}
+	set slot 37 of {_p}'s current inventory to {Presets.leggings::%{_name}%}
+	set slot 38 of {_p}'s current inventory to {Presets.chestplate::%{_name}%}
+	set slot 39 of {_p}'s current inventory to {Presets.helmet::%{_name}%}
+	set slot 40 of {_p}'s current inventory to {Presets.offhand::%{_name}%} 
+	set slot 41, 42, 43, 44 of {_p}'s current inventory to white stained glass pane named "%{@gray_color}%&l<- ARMOUR AND OFFHAND"
+	set slot 48 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 50 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 52 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 45 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 46 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 47 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 47 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 51 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 49 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 53 of {_p}'s current inventory to black stained glass pane named {@gray_color}
+	set slot 45 of {_p}'s current inventory to red concrete named "%{@red_color}%&lBACK" with lore "%{@gray_color}%Click to return."
+
+
+on inventory click:
+	if name of event-inventory contains "%{@gray_color}%Preview Preset":
+		cancel event
+		if index of event-slot is 45:
+			presetKits(player, 1)
+			play sound "block.dispenser.fail" with volume 5 with pitch 1 at player for player
+
+
+# NBT SETTING
+
+on load:
+	set {i.helmet} to netherite helmet of aqua affinity 1 and mending 1 and protection 4 and respiration 3 and unbreaking 3
+	set {i.chestplate} to netherite chestplate of mending 1 and protection 4 and unbreaking 3
+	set {i.leggings} to netherite leggings of blast protection 4 and mending 1 and swift sneak 3 and unbreaking 3
+	set {i.boots} to netherite boots of depth strider 3 and feather falling 4 and mending 1 and protection 4 and soul speed 3 and unbreaking 3
+	set {i.dhelmet} to diamond helmet of aqua affinity 1 and mending 1 and protection 4 and respiration 3 and unbreaking 3
+	set {i.dchestplate} to diamond chestplate of mending 1 and protection 4 and unbreaking 3
+	set {i.dleggings} to diamond leggings of blast protection 4 and mending 1 and swift sneak 3 and unbreaking 3
+	set {i.dboots} to diamond boots of depth strider 3 and feather falling 4 and mending 1 and protection 4 and soul speed 3 and unbreaking 3
+	set {_nbt24_} to nbt compound from "{Charged:1b,ChargedProjectiles:[{Count:1b,id:""minecraft:tipped_arrow"",tag:{Potion:""minecraft:long_slow_falling""}}],Damage:0,Enchantments:[{id:""minecraft:mending"",lvl:1s},{id:""minecraft:piercing"",lvl:4s},{id:""minecraft:quick_charge"",lvl:3s},{id:""minecraft:unbreaking"",lvl:3s}]}"
+	set {i.crossbow1} to crossbow with nbt {_nbt24_}
+	set {_nbt26_} to nbt compound from "{Charged:1b,ChargedProjectiles:[{Count:1b,id:""minecraft:tipped_arrow"",tag:{Potion:""minecraft:long_slow_falling""}},{Count:63b,id:""minecraft:tipped_arrow"",tag:{Potion:""minecraft:long_slow_falling""}},{Count:63b,id:""minecraft:tipped_arrow"",tag:{Potion:""minecraft:long_slow_falling""}}],Damage:0,Enchantments:[{id:""minecraft:mending"",lvl:1s},{id:""minecraft:multishot"",lvl:1s},{id:""minecraft:quick_charge"",lvl:3s},{id:""minecraft:unbreaking"",lvl:3s}]}"
+	set {i.crossbow2} to crossbow with nbt {_nbt26_}
+	set {_nbt31_} to nbt compound from "{Damage:0,Enchantments:[{id:""minecraft:flame"",lvl:1s},{id:""minecraft:mending"",lvl:1s},{id:""minecraft:power"",lvl:5s},{id:""minecraft:punch"",lvl:1s},{id:""minecraft:unbreaking"",lvl:3s}]}"
+	set {i.bow} to bow with nbt {_nbt31_}
+	set {i.ely} to a elytra of unbreaking 3 and mending 1
+	set {i.elytra} to a elytra of unbreaking 3 and mending 1
+	set {i.shield} to a shield of unbreaking 3 and mending 1
+	set {i.xp} to 64 bottle o' enchanting
+	set {i.sf} to 64 long slow falling tipped arrows
+	set {i.firework} to 64 flight 1 firework rockets
+	set {i.pick} to netherite pickaxe of efficiency 5 and unbreaking 3 and mending 1 and silk touch
+	set {i.axe} to netherite axe of efficiency 5 and unbreaking 3 and mending 1 and silk touch and sharpness 5
+	set {i.sword1} to netherite sword of knockback 1 and unbreaking 3 and mending 1 and sweeping edge 3 and sharpness 5
+	set {i.sword2} to netherite sword of knockback 2 and unbreaking 3 and mending 1 and sweeping edge 3 and sharpness 5
+	set {i.dsword1} to diamond sword of knockback 1 and unbreaking 3 and mending 1 and sweeping edge 3 and sharpness 5
+	set {i.dsword2} to diamond sword of knockback 2 and unbreaking 3 and mending 1 and sweeping edge 3 and sharpness 5
+	set {i.turtle1} to splash potions of extended turtle master
+	set {i.turtle2} to splash potions of strong turtle master
+	set {i.speed} to splash potions of strong speed
+	set {i.strength} to splash potions of strong strength
+	set {i.invis} to splash potions of extended invisibility
+	set {i.fireres} to splash potions of extended fire resistance
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""221""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjFkZDRmZTRhNDI5YWJkNjY1ZGZkYjNlMjEzMjFkNmVmYTZhNmI1ZTdiOTU2ZGI5YzVkNTljOWVmYWIyNSJ9fX0=""}]}}}"
+	set {head.globe} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""9326""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzQ5ZDI3MWM1ZGY4NGY4YTNjOGFhNWQxNTQyN2Y2MjgzOTM0MWRhYjUyYzYxOWE1OTg3ZDM4ZmJlMThlNDY0In19fQ==""}]}}}"
+	set {head.red.back} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""24498""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDAxYWZlOTczYzU0ODJmZGM3MWU2YWExMDY5ODgzM2M3OWM0MzdmMjEzMDhlYTlhMWEwOTU3NDZlYzI3NGEwZiJ9fX0=""}]}}}"
+	set {head.info} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""56786""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjcwNWZkOTRhMGM0MzE5MjdmYjRlNjM5YjBmY2ZiNDk3MTdlNDEyMjg1YTAyYjQzOWUwMTEyZGEyMmIyZTJlYyJ9fX0=""}]}}}"
+	set {head.question} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""228""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTZjYzQ4NmMyYmUxY2I5ZGZjYjJlNTNkZDlhM2U5YTg4M2JmYWRiMjdjYjk1NmYxODk2ZDYwMmI0MDY3In19fQ==""}]}}}"
+	set {head.ec} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""15994""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzIyZDRiZTFhYmNmMzgzMmM5MTYxOTFkMjRmOTYwN2JmMTk0ZWZmOGRmYmYzYjk1MjBiZDk3MjQwZTdjOCJ9fX0=""}]}}}"
+	set {head.kit} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""40207""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2U1YWJkYjczNzQ1NTNkMDU2NWNiY2IzMjk1YWVkNTE1YTg5N2ViY2U5ZTBiYzYwZjFjMWY4YWU1NGM3NDlkZiJ9fX0=""}]}}}"
+	set {head.bluebackpack} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""21771""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTkyZTMxZmZiNTljOTBhYjA4ZmM5ZGMxZmUyNjgwMjAzNWEzYTQ3YzQyZmVlNjM0MjNiY2RiNDI2MmVjYjliNiJ9fX0=""}]}}}"
+	set {head.checkmark} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""9382""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmViNTg4YjIxYTZmOThhZDFmZjRlMDg1YzU1MmRjYjA1MGVmYzljYWI0MjdmNDYwNDhmMThmYzgwMzQ3NWY3In19fQ==""}]}}}"
+	set {head.redx} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""227""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDVjNmRjMmJiZjUxYzM2Y2ZjNzcxNDU4NWE2YTU2ODNlZjJiMTRkNDdkOGZmNzE0NjU0YTg5M2Y1ZGE2MjIifX19""}]}}}"
+	set {head.backpack} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""209""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGQ1NDI3YTgzNTQwYTA4YTNmYTJlNjU1YzI5NjRhMDcyNDM1MTQ1ODRhNzFlYzM1ZDZiOWUxODRkZmJlMzE4In19fQ==""}]}}}"
+	set {head.lava} to player head with nbt {_nbt}
+	set {_nbt} to nbt compound from "{PublicBukkitValues:{""zhead:zhead-item"":""50839""},SkullOwner:{Id:[I;-1836694459,1371884603,-1875291780,-1725443660],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDc1ZDNkYjAzZGMyMWU1NjNiMDM0MTk3ZGE0MzViNzllY2ZlZjRiOGUyZWNkYjczMGUzNzBjMzE2NjI5ZDM2ZiJ9fX0=""}]}}}"
+	set {head.refresh} to player head with nbt {_nbt}
